@@ -1,66 +1,37 @@
-﻿const CACHE_NAME = 'vocab-production-pwa-cache-v1';
-const ASSETS_TO_CACHE = [
-  'index.html',
-  'style.css',
-  'app.js',
-  'manifest.json',
-  'vocab_ALL_756.json',
-  'icon-192.png',
-  'icon-512.png'
+const CACHE_NAME = 'vocab-v1';
+const ASSETS = [
+  '/vocab-quiz/',
+  '/vocab-quiz/index.html',
+  '/vocab-quiz/style.css',
+  '/vocab-quiz/app.js',
+  '/vocab-quiz/manifest.json',
+  '/vocab-quiz/vocab_ALL_756.json',
+  '/vocab-quiz/app-icon-192.svg',
+  '/vocab-quiz/app-icon-512.svg'
 ];
 
-// SW Installation Phase Lifecycle Hook
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        return cache.addAll(ASSETS_TO_CACHE);
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(ASSETS);
+    }).then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys().then(keys => Promise.all(
+      keys.map(key => {
+        if (key !== CACHE_NAME) return caches.delete(key);
       })
-      .then(() => self.skipWaiting())
+    )).then(() => self.clients.claim())
   );
 });
 
-// Cache Eviction Activation Lifecycle Strategy Phase
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
-  );
-});
-
-// Intercept pipeline request strategies fetch network fallback proxy blocks
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-          return networkResponse;
-        }
-
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-
-        return networkResponse;
-      }).catch(() => {
-        // Fallback to offline structural container if resources pull fails completely
-        return caches.match('index.html');
-      });
+self.addEventListener('fetch', e => {
+  e.respondWith(
+    caches.match(e.request).then(res => {
+      return res || fetch(e.request);
     })
   );
 });
-
