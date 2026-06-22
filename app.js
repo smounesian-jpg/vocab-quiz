@@ -11,7 +11,12 @@ if ('serviceWorker' in navigator) {
 }
 
 // ۲. دریافت دیتابیس لغات با آدرس کامل و تصحیح‌شده گیت‌هاب
-fetch('/vocab-quiz/vocab_ALL_756.json')
+// پیدا کردن خودکار مسیر اصلی پروژه روی گیت‌هاب پیج
+const repoPath = window.location.pathname.split('/')[1];
+const jsonUrl = window.location.origin + '/' + repoPath + '/vocab_ALL_756.json';
+
+fetch(jsonUrl)
+
     .then(res => {
         if (!res.ok) throw new Error('Network response was not ok');
         return res.json();
