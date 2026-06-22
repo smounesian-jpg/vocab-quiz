@@ -1,0 +1,277 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>سامانه پیشرفته آموزش و آزمون لغات انگلیسی</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="light-mode">
+    <div id="app-container" class="app-container">
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h2>پنل کاربری</h2>
+                <button id="close-sidebar-btn" class="icon-btn">✕</button>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-target="dashboard-view">
+                    <span class="nav-icon">📊</span> داشبورد و آمار
+                </button>
+                <button class="nav-item" data-target="browse-view">
+                    <span class="nav-icon">📚</span> مرور و جستجوی لغات
+                </button>
+                <button class="nav-item" data-target="quiz-setup-view">
+                    <span class="nav-icon">📝</span> برگزاری آزمون
+                </button>
+                <button class="nav-item" data-target="srs-view">
+                    <span class="nav-icon">🔄</span> جعبه لایتنر (SRS)
+                </button>
+                <button class="nav-item" data-target="analytics-view">
+                    <span class="nav-icon">📈</span> آنالیز کلمات
+                </button>
+                <button class="nav-item" data-target="favorites-view">
+                    <span class="nav-icon">⭐</span> علاقه‌مندی‌ها و دشوارها
+                </button>
+                <button class="nav-item" data-target="settings-view">
+                    <span class="nav-icon">⚙️</span> تنظیمات و پشتیبان‌گیری
+                </button>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="top-bar-right">
+                    <button id="menu-toggle-btn" class="icon-btn">☰</button>
+                    <h1 id="view-title">داشبورد و آمار پیشرفت</h1>
+                </div>
+                <div class="top-bar-left">
+                    <button id="theme-toggle-btn" class="icon-btn">🌙</button>
+                </div>
+            </header>
+
+            <div id="view-manager" class="view-manager">
+                
+                <section id="dashboard-view" class="view-screen active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="dash-total-answered">0</div>
+                            <div class="stat-label">کل پاسخ‌ها</div>
+                        </div>
+                        <div class="stat-card success">
+                            <div class="stat-value" id="dash-correct-rate">0%</div>
+                            <div class="stat-label">درصد پاسخ صحیح</div>
+                        </div>
+                        <div class="stat-card danger">
+                            <div class="stat-value" id="dash-incorrect-rate">0%</div>
+                            <div class="stat-label">درصد پاسخ نادرست</div>
+                        </div>
+                        <div class="stat-card info">
+                            <div class="stat-value" id="dash-srs-due">0</div>
+                            <div class="stat-label">کلمات منتظر مرور</div>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-charts">
+                        <div class="card-layout">
+                            <h3>📊 روند پاسخ‌دهی روزانه و هفتگی</h3>
+                            <div class="chart-container" id="dash-timeline-chart"></div>
+                        </div>
+                        <div class="card-layout">
+                            <h3>🎯 عملکرد به تفکیک آزمون‌ها و منابع</h3>
+                            <div class="chart-container" id="dash-source-chart"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="browse-view" class="view-screen">
+                    <div class="filter-panel card-layout">
+                        <div class="search-box">
+                            <input type="text" id="browse-search-input" placeholder="جستجو در صورت سوال، لغات، معانی فارسی و منابع...">
+                        </div>
+                        <div class="filter-selectors">
+                            <select id="browse-filter-source">
+                                <option value="all">همه منابع</option>
+                            </select>
+                            <select id="browse-filter-year">
+                                <option value="all">همه سال‌ها</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="counter-label">تعداد سوالات یافت شده: <span id="browse-count">0</span></div>
+                    <div id="browse-list-container" class="items-list-container"></div>
+                    <div class="pagination-controls" id="browse-pagination"></div>
+                </section>
+
+                <section id="quiz-setup-view" class="view-screen">
+                    <div class="card-layout quiz-setup-card">
+                        <h3>تنظیمات و پارامترهای آزمون</h3>
+                        <div class="form-group">
+                            <label>نوع آزمون:</label>
+                            <select id="quiz-mode-select">
+                                <option value="random">تصادفی جامع</option>
+                                <option value="year">بر اساس سال برگزاری</option>
+                                <option value="source">بر اساس منبع و آزمون</option>
+                                <option value="range">محدوده انتخابی شناسه سوالات</option>
+                                <option value="adaptive">هوشمند و تطبیقی (بر اساس نقاط ضعف)</option>
+                            </select>
+                        </div>
+                        
+                        <div id="quiz-conditional-fields">
+                            <div class="form-group conditional-field hidden" id="field-quiz-year">
+                                <label>انتخاب سال:</label>
+                                <select id="quiz-year-select"></select>
+                            </div>
+                            <div class="form-group conditional-field hidden" id="field-quiz-source">
+                                <label>انتخاب منبع:</label>
+                                <select id="quiz-source-select"></select>
+                            </div>
+                            <div class="form-group conditional-field hidden" id="field-quiz-range">
+                                <label>محدوده شناسه (از 1 تا 756):</label>
+                                <div class="range-inputs">
+                                    <input type="number" id="quiz-range-from" value="1" min="1">
+                                    <span>تا</span>
+                                    <input type="number" id="quiz-range-to" value="100" min="1">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>تعداد سوالات آزمون:</label>
+                            <input type="number" id="quiz-count-input" value="10" min="5" max="100">
+                        </div>
+
+                        <button id="start-quiz-btn" class="primary-btn block-btn">🏁 شروع آزمون</button>
+                    </div>
+                </section>
+
+                <section id="live-quiz-view" class="view-screen">
+                    <div class="quiz-header card-layout">
+                        <div class="progress-bar-wrapper">
+                            <div id="quiz-progress-fill" class="progress-bar-fill"></div>
+                        </div>
+                        <div class="quiz-meta-info">
+                            <span id="quiz-question-number">سوال 1 از 10</span>
+                            <span id="quiz-timer">⏱️ 00:00</span>
+                        </div>
+                    </div>
+
+                    <div id="quiz-card-anchor" class="card-layout question-card">
+                        <div class="question-meta-tags">
+                            <span id="q-meta-source" class="tag">منبع</span>
+                            <button id="q-favorite-toggle" class="star-toggle-btn">⭐</button>
+                        </div>
+                        <div id="q-text-container" class="question-text">Loading question text...</div>
+                        
+                        <div class="options-container" id="q-options-container">
+                            <button class="option-btn" data-index="1"><span class="opt-num">۱</span> <span class="opt-text"></span></button>
+                            <button class="option-btn" data-index="2"><span class="opt-num">۲</span> <span class="opt-text"></span></button>
+                            <button class="option-btn" data-index="3"><span class="opt-num">۳</span> <span class="opt-text"></span></button>
+                            <button class="option-btn" data-index="4"><span class="opt-num">۴</span> <span class="opt-text"></span></button>
+                        </div>
+
+                        <div id="quiz-explanation-panel" class="explanation-panel hidden">
+                            <div class="alert-status" id="quiz-answer-status"></div>
+                            <div class="explanation-section">
+                                <h4>ترجمه صورت سوال:</h4>
+                                <p id="q-translation-text"></p>
+                            </div>
+                            <div class="explanation-section">
+                                <h4>پاسخ تشریحی و تحلیل گزینه صحیح:</h4>
+                                <p id="q-explanation-text"></p>
+                            </div>
+                            <div class="explanation-section">
+                                <h4>معانی تمامی گزینه‌ها:</h4>
+                                <div id="q-options-meanings-list"></div>
+                            </div>
+                            <div class="srs-action-block">
+                                <h4>برنامه‌ریزی مرور فواصل زمانی (جعبه لایتنر هوشمند):</h4>
+                                <div class="srs-buttons">
+                                    <button class="srs-btn" data-interval="1">۱ روز</button>
+                                    <button class="srs-btn" data-interval="3">۳ روز</button>
+                                    <button class="srs-btn" data-interval="7">۷ روز</button>
+                                    <button class="srs-btn" data-interval="14">۱۴ روز</button>
+                                    <button class="srs-btn" data-interval="30">۳۰ روز</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quiz-navigation-bar">
+                        <button id="quiz-next-btn" class="primary-btn block-btn hidden">سوال بعدی ➡️</button>
+                        <button id="quiz-finish-early-btn" class="secondary-btn">انصراف و پایان آزمون</button>
+                    </div>
+                </section>
+
+                <section id="srs-view" class="view-screen">
+                    <div class="card-layout info-banner">
+                        <h3>🔄 سیستم مرور هوشمند فاصله‌دار (Spaced Repetition System)</h3>
+                        <p>کلماتی که در آزمون‌ها اشتباه پاسخ داده‌اید یا مایل به مرور مجدد آن‌ها بوده‌اید، بر اساس فواصل زمانی علمی در این بخش ظاهر می‌شوند تا به حافظه بلندمدت شما منتقل گردند.</p>
+                        <div class="srs-summary-box">
+                            تعداد کلمات آماده مرور در حال حاضر: <strong id="srs-pending-count">0</strong> کلمه
+                        </div>
+                        <button id="start-srs-quiz-btn" class="primary-btn block-btn">🚀 شروع ماراتن مرور لغات منتظر</button>
+                    </div>
+                </section>
+
+                <section id="analytics-view" class="view-screen">
+                    <div class="analytics-tabs">
+                        <button class="tab-btn active" data-subview="difficult">سخت‌ترین کلمات</button>
+                        <button class="tab-btn" data-subview="forgotten">بیشترین فراموش‌شده‌ها</button>
+                        <button class="tab-btn" data-subview="strongest">قوی‌ترین کلمات شما</button>
+                        <button class="tab-btn" data-subview="weakest">ضعیف‌ترین کلمات شما</button>
+                    </div>
+
+                    <div class="card-layout subview-card-container">
+                        <h3 id="analytics-subview-title">سخت‌ترین کلمات</h3>
+                        <div id="analytics-list-container" class="analytics-items-list"></div>
+                    </div>
+                </section>
+
+                <section id="favorites-view" class="view-screen">
+                    <div class="view-split-tabs">
+                        <button class="tab-btn active" id="tab-toggle-favs">⭐ نشان‌شده‌ها و علاقه‌مندی‌ها</button>
+                        <button class="tab-btn" id="tab-toggle-diffs">⚠️ سوالات اشتباه پاسخ داده شده</button>
+                    </div>
+                    <div id="favorites-list-container" class="items-list-container mt-4"></div>
+                </section>
+
+                <section id="settings-view" class="view-screen">
+                    <div class="card-layout settings-card">
+                        <h3>⚙️ مدیریت داده‌ها و فایل پشتیبان</h3>
+                        <p class="help-text">تمامی داده‌های شما به صورت آفلاین در مرورگر ذخیره می‌شود. جهت جلوگیری از پاک شدن فرآیند مطالعه، به طور منظم فایل پشتیبان تهیه کنید.</p>
+                        
+                        <div class="action-buttons-group">
+                            <button id="export-progress-btn" class="primary-btn">📥 خروجی گرفتن از روند پیشرفت (Export)</button>
+                            <label for="import-progress-file" class="custom-file-upload">
+                                📤 بارگذاری فایل پیشرفت کاربران (Import Backup)
+                            </label>
+                            <input type="file" id="import-progress-file" accept=".json">
+                        </div>
+                    </div>
+
+                    <div class="card-layout settings-card mt-4">
+                        <h3>📂 پیکربندی مخزن سوالات اولیه (JSON)</h3>
+                        <p class="help-text">اگر مایل به بازنشانی سوالات یا بارگذاری نسخه جدید دیتابیس ۷۵۶ سوالی هستید، فایل اصلی را از این بخش انتخاب کنید.</p>
+                        <div class="action-buttons-group">
+                            <label for="import-database-file" class="custom-file-upload variant-sec">
+                                📁 بارگذاری مجدد دیتابیس سوالات آزمون
+                            </label>
+                            <input type="file" id="import-database-file" accept=".json">
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <div id="toast-notification" class="toast hidden">پیام سیستم</div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+
