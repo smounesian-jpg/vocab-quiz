@@ -20,6 +20,9 @@ function toggleTheme() {
 }
 if (localStorage.getItem('quiz_dark_theme') === 'true') document.body.classList.add('dark-theme');
 
+// ──────────────────────────────────────────────
+//  ایمپورت دستی (برای فایل‌های دیگر)
+// ──────────────────────────────────────────────
 function importJSONFile() {
     const fileInput = document.getElementById('json-file-input');
     const file = fileInput.files[0];
@@ -75,7 +78,7 @@ function setupQuizMode() {
         document.getElementById('options-box').style.display = 'none';
         document.getElementById('test-info-header').style.display = 'none';
         document.getElementById('question-text').textContent = isLeitnerMode ? 
-            "جعبه لایتنر شما خالی است! سوالی با پاسخ اشتباه وجود ندارد." : "لطفاً ابتدا فایل تست‌ها را ایمپورت کنید.";
+            "جعبه لایتنر شما خالی است! سوالی با پاسخ اشتباه وجود ندارد." : "در حال بارگذاری سوالات...";
     }
 }
 
@@ -84,16 +87,12 @@ function renderQuestion() {
     
     currentQuestionData = activePool[currentIndex];
     
-    // تزریق مستقیم منبع و شماره تست به هدر با کلمات فارسی واضح
     const testId = currentQuestionData.id || (currentIndex + 1);
     const testSource = currentQuestionData.source || "تألیفی یا نامشخص";
     
     document.getElementById('test-info-header').innerHTML = `🔹 شماره تست: ${testId} <br>🔹 منبع: ${testSource}`;
-    
-    // نمایش صورت سوال انگلیسی
     document.getElementById('question-text').textContent = currentQuestionData.question || '';
     
-    // نمایش گزینه‌ها با فرمت انگلیسی استاندارد برای خوانایی بهتر
     document.getElementById('opt1').textContent = "1. " + (currentQuestionData.option1 || '');
     document.getElementById('opt2').textContent = "2. " + (currentQuestionData.option2 || '');
     document.getElementById('opt3').textContent = "3. " + (currentQuestionData.option3 || '');
@@ -162,25 +161,47 @@ function toggleLeitnerMode() {
     setupQuizMode();
 }
 
+// ──────────────────────────────────────────────
+//  ذخیره Progress (بدون mainDatabase برای جلوگیری از Quota خطا)
+// ──────────────────────────────────────────────
 function saveToLocalStorage() {
-    localStorage.setItem('cached_main_db', JSON.stringify(mainDatabase));
-    localStorage.setItem('cached_leitner_db', JSON.stringify(leitnerDatabase));
-    localStorage.setItem('quiz_current_index', currentIndex);
-    localStorage.setItem('quiz_user_score', userScore);
+    try {
+        localStorage.setItem('cached_leitner_db', JSON.stringify(leitnerDatabase));
+        localStorage.setItem('quiz_current_index', currentIndex);
+        localStorage.setItem('quiz_user_score', userScore);
+    } catch(e) {
+        console.warn('localStorage خطا:', e);
+    }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-    const localMain = localStorage.getItem('cached_main_db');
+// ──────────────────────────────────────────────
+//  بارگذاری اولیه: auto-fetch از سرور + restore progress
+// ──────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+    // بارگذاری progress از localStorage
     const localLeitner = localStorage.getItem('cached_leitner_db');
-    const localIndex = localStorage.getItem('quiz_current_index');
-    const localScore = localStorage.getItem('quiz_user_score');
-    
-    if (localMain) mainDatabase = JSON.parse(localMain);
-    if (localLeitner) leitnerDatabase = JSON.parse(localLeitner);
-    if (localIndex) currentIndex = parseInt(localIndex);
-    if (localScore) userScore = parseInt(localScore);
-    
-    if (mainDatabase.length > 0 || leitnerDatabase.length > 0) {
+    const localIndex   = localStorage.getItem('quiz_current_index');
+    const localScore   = localStorage.getItem('quiz_user_score');
+
+    try { if (localLeitner) leitnerDatabase = JSON.parse(localLeitner); } catch(e) {}
+    if (localIndex !== null) currentIndex = parseInt(localIndex) || 0;
+    if (localScore !== null) userScore    = parseInt(localScore)  || 0;
+
+    // نمایش وضعیت بارگذاری
+    document.getElementById('question-text').textContent = '⏳ در حال بارگذاری سوالات از سرور...';
+
+    // auto-fetch فایل JSON از همین ریپو
+    try {
+        const response = await fetch('/vocab-quiz/vocab_ALL_756.json');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        mainDatabase = await response.json();
         setupQuizMode();
+    } catch (fetchErr) {
+        console.error('خطا در دریافت فایل سوالات:', fetchErr);
+        document.getElementById('question-text').textContent =
+            '⚠️ بارگذاری خودکار ناموفق بود. لطفاً فایل JSON را دستی ایمپورت کنید.';
+        // نمایش بخش ایمپورت دستی به عنوان fallback
+        document.getElementById('options-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
     }
 });
