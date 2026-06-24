@@ -92,31 +92,48 @@
             padding: 1.5rem;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
         }
+        .meta-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
         .source-tag {
-            display: inline-block;
             background: #e0e7ff;
             color: #4338ca;
-            padding: 0.25rem 0.5rem;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            margin-bottom: 0.75rem;
+            padding: 0.35rem 0.65rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
             font-weight: bold;
         }
         .dark-theme .source-tag {
             background: #312e81;
             color: #c7d2fe;
         }
+        .id-tag {
+            background: var(--bg-color);
+            color: var(--text-color);
+            padding: 0.35rem 0.65rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            border: 1px solid var(--border);
+        }
+        /* باکس سوال کاملاً انگلیسی و چپ‌چین با حمایت از شکستن درست خطوط */
         .question-text {
-            font-size: 1.1rem;
-            line-height: 1.6;
+            font-size: 1.15rem;
+            line-height: 1.7;
             margin-bottom: 1.5rem;
-            white-space: pre-wrap;
+            white-space: normal;
+            word-break: break-word;
+            direction: ltr;
+            text-align: left;
         }
         .options-container {
             display: grid;
             grid-template-columns: 1fr;
             gap: 0.75rem;
         }
+        /* گزینه‌ها کاملاً انگلیسی همراه با شماره گزینه انگلیسی برای عدم تداخل */
         .btn-option {
             background: var(--bg-color);
             color: var(--text-color);
@@ -124,7 +141,8 @@
             padding: 1rem;
             border-radius: 10px;
             cursor: pointer;
-            text-align: right;
+            direction: ltr;
+            text-align: left;
             font-size: 1rem;
             line-height: 1.4;
             transition: background-color 0.2s;
@@ -137,7 +155,9 @@
             border-radius: 10px;
             margin-top: 1rem;
             display: none;
-            line-height: 1.5;
+            line-height: 1.6;
+            direction: rtl;
+            text-align: right;
         }
         .dark-theme .explanation-box {
             background: #064e3b;
@@ -189,7 +209,7 @@
         </div>
 
         <div class="filter-section" id="filter-bar">
-            <label style="font-size: 0.85rem;">ترتیب نمایش آزمون:</main>
+            <label style="font-size: 0.85rem;">ترتیب نمایش آزمون:</label>
             <select id="order-select" onchange="changeOrderMode()">
                 <option value="sequential">به ترتیب دفترچه</option>
                 <option value="random">تصادفی (Random)</option>
@@ -197,7 +217,11 @@
         </div>
 
         <div class="card" id="quiz-card">
-            <div id="source-wrapper"></div>
+            <div class="meta-container">
+                <span id="source-wrapper"></span>
+                <span id="id-wrapper"></span>
+            </div>
+            
             <div class="question-text" id="question-text">لطفاً ابتدا فایل JSON خود را از بخش زیر ایمپورت کنید.</div>
             
             <div class="options-container" id="options-box" style="display: none;">
@@ -212,7 +236,7 @@
         </div>
 
         <div class="import-section">
-            <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem;">📥 بارگذاری دیتابیس تست کنکور</h4>
+            <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem;">📥 بارگذاری دیتابیس تست کنکور (`vocab_ALL_756.json`)</h4>
             <input type="file" id="json-file-input" accept=".json" onchange="importJSONFile()" style="width: 100%;">
         </div>
     </div>
