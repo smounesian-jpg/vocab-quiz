@@ -1,8 +1,7 @@
-const CACHE_NAME = 'vocab-v2';
-const CORE_ASSETS = [
+const CACHE_NAME = 'vocab-quiz-v3';
+const ASSETS = [
   '/vocab-quiz/',
   '/vocab-quiz/index.html',
-  '/vocab-quiz/style.css',
   '/vocab-quiz/app.js',
   '/vocab-quiz/manifest.json'
 ];
@@ -10,7 +9,7 @@ const CORE_ASSETS = [
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(CORE_ASSETS);
+      return cache.addAll(ASSETS);
     }).then(() => self.skipWaiting())
   );
 });
@@ -27,15 +26,6 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   e.respondWith(
-    caches.match(e.request).then(res => {
-      if (res) return res;
-      return fetch(e.request).then(response => {
-        if (e.request.url.includes('vocab_ALL_756.json') && response.status === 200) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-        }
-        return response;
-      }).catch(() => caches.match('/vocab-quiz/index.html'));
-    })
+    caches.match(e.request).then(res => res || fetch(e.request))
   );
 });
