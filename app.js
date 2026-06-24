@@ -5,7 +5,7 @@ let activePool = [];
 let currentIndex = 0;
 let userScore = 0;
 let isLeitnerMode = false;
-let orderMode = 'sequential'; // sequential or random
+let orderMode = 'sequential'; 
 let currentQuestionData = null;
 
 if ('serviceWorker' in navigator) {
@@ -14,14 +14,12 @@ if ('serviceWorker' in navigator) {
         .catch(err => console.log('SW Failed', err));
 }
 
-// ۱. مدیریت تم رنگی
 function toggleTheme() {
     document.body.classList.toggle('dark-theme');
     localStorage.setItem('quiz_dark_theme', document.body.classList.contains('dark-theme'));
 }
 if (localStorage.getItem('quiz_dark_theme') === 'true') document.body.classList.add('dark-theme');
 
-// ۲. پردازش و ایمپورت فایل JSON
 function importJSONFile() {
     const fileInput = document.getElementById('json-file-input');
     const file = fileInput.files[0];
@@ -51,7 +49,6 @@ function importJSONFile() {
     reader.readAsText(file);
 }
 
-// ۳. پیکربندی حالت فیلترها و استخر سوالات فعال
 function setupQuizMode() {
     if (isLeitnerMode) {
         activePool = [...leitnerDatabase];
@@ -61,7 +58,6 @@ function setupQuizMode() {
         document.getElementById('filter-bar').style.display = 'flex';
         
         if (orderMode === 'random') {
-            // شافل کردن سوالات بدون دستکاری دیتابیس اصلی
             activePool.sort(() => Math.random() - 0.5);
         }
     }
@@ -77,34 +73,39 @@ function setupQuizMode() {
     } else {
         document.getElementById('options-box').style.display = 'none';
         document.getElementById('source-wrapper').innerHTML = '';
+        document.getElementById('id-wrapper').innerHTML = '';
         document.getElementById('question-text').textContent = isLeitnerMode ? 
             "جعبه لایتنر شما خالی است! سوالی با پاسخ اشتباه وجود ندارد." : "لطفاً ابتدا فایل تست‌ها را ایمپورت کنید.";
     }
 }
 
-// ۴. نمایش سوال کنکور، منبع و گزینه‌ها به صورت کاملاً RTL
 function renderQuestion() {
     if (activePool.length === 0) return;
     
     currentQuestionData = activePool[currentIndex];
     
-    // تفکیک و استخراج خودکار منبع تست در صورت وجود
-    let rawQuestion = currentQuestionData.question || '';
-    let sourceMatch = rawQuestion.match(/^\[(.*?)\]/);
-    
-    if (sourceMatch) {
-        document.getElementById('source-wrapper').innerHTML = `<span class="source-tag">📌 منبع: ${sourceMatch[1]}</span>`;
-        document.getElementById('question-text').textContent = rawQuestion.replace(/^\[.*?\]/, '').trim();
+    // ۱. نمایش دقیق منبع تست از کلید source فایل شما
+    if (currentQuestionData.source) {
+        document.getElementById('source-wrapper').innerHTML = `<span class="source-tag">📌 منبع: ${currentQuestionData.source}</span>`;
     } else {
         document.getElementById('source-wrapper').innerHTML = '';
-        document.getElementById('question-text').textContent = rawQuestion;
+    }
+
+    // ۲. نمایش دقیق شماره تست از کلید id فایل شما
+    if (currentQuestionData.id) {
+        document.getElementById('id-wrapper').innerHTML = `<span class="id-tag">تست شماره: ${currentQuestionData.id}</span>`;
+    } else {
+        document.getElementById('id-wrapper').innerHTML = '';
     }
     
-    // گزینه‌ها
-    document.getElementById('opt1').textContent = "۱) " + (currentQuestionData.option1 || '');
-    document.getElementById('opt2').textContent = "۲) " + (currentQuestionData.option2 || '');
-    document.getElementById('opt3').textContent = "۳) " + (currentQuestionData.option3 || '');
-    document.getElementById('opt4').textContent = "۴) " + (currentQuestionData.option4 || '');
+    // ۳. نمایش صورت سوال انگلیسی
+    document.getElementById('question-text').textContent = currentQuestionData.question || '';
+    
+    // ۴. نمایش گزینه‌ها با فرمت انگلیسی استاندارد (1, 2, 3, 4) جهت عدم تداخل متنی
+    document.getElementById('opt1').textContent = "1. " + (currentQuestionData.option1 || '');
+    document.getElementById('opt2').textContent = "2. " + (currentQuestionData.option2 || '');
+    document.getElementById('opt3').textContent = "3. " + (currentQuestionData.option3 || '');
+    document.getElementById('opt4').textContent = "4. " + (currentQuestionData.option4 || '');
     
     for (let i = 1; i <= 4; i++) {
         const btn = document.getElementById('opt' + i);
@@ -116,7 +117,6 @@ function renderQuestion() {
     document.getElementById('next-btn').style.display = 'none';
 }
 
-// ۵. تحلیل هوشمند پاسخ کاربر و ارسال اتوماتیک به لایتنر در صورت خطا
 function submitAnswer(selected) {
     for (let i = 1; i <= 4; i++) document.getElementById('opt' + i).disabled = true;
     
@@ -127,9 +127,9 @@ function submitAnswer(selected) {
         document.getElementById('opt' + selected).style.color = 'white';
         userScore += 10;
         
-        // اگر در حالت لایتنر پاسخ درست داد، سوال از لایتنر خارج می‌شود
         if (isLeitnerMode) {
-            leitnerDatabase = leitnerDatabase.filter(item => item.question !== currentQuestionData.question);
+            // حذف از لایتنر در صورت پاسخ صحیح در حالت مرور اشتباهات
+            leitnerDatabase = leitnerDatabase.filter(item => item.id !== currentQuestionData.id);
         }
     } else {
         document.getElementById('opt' + selected).style.backgroundColor = 'var(--danger)';
@@ -137,8 +137,8 @@ function submitAnswer(selected) {
         document.getElementById('opt' + correct).style.backgroundColor = 'var(--success)';
         document.getElementById('opt' + correct).style.color = 'white';
         
-        // اضافه کردن سوال اشتباه به لایتنر در صورت عدم وجود
-        const exists = leitnerDatabase.some(item => item.question === currentQuestionData.question);
+        // افزودن به لایتنر در صورت پاسخ اشتباه
+        const exists = leitnerDatabase.some(item => item.id === currentQuestionData.id);
         if (!exists) leitnerDatabase.push(currentQuestionData);
     }
     
@@ -159,7 +159,6 @@ function loadNextQuestion() {
     }
 }
 
-// ۶. فیلترها و سوییچ کردن حالت‌ها
 function changeOrderMode() {
     orderMode = document.getElementById('order-select').value;
     currentIndex = 0;
@@ -173,7 +172,6 @@ function toggleLeitnerMode() {
     setupQuizMode();
 }
 
-// ۷. سیستم ذخیره پایدار در حافظه محلی گوشی
 function saveToLocalStorage() {
     localStorage.setItem('cached_main_db', JSON.stringify(mainDatabase));
     localStorage.setItem('cached_leitner_db', JSON.stringify(leitnerDatabase));
