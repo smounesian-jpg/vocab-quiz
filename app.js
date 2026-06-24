@@ -69,11 +69,11 @@ function setupQuizMode() {
     if (activePool.length > 0) {
         if (currentIndex >= activePool.length) currentIndex = 0;
         document.getElementById('options-box').style.display = 'grid';
+        document.getElementById('test-info-header').style.display = 'block';
         renderQuestion();
     } else {
         document.getElementById('options-box').style.display = 'none';
-        document.getElementById('source-wrapper').innerHTML = '';
-        document.getElementById('id-wrapper').innerHTML = '';
+        document.getElementById('test-info-header').style.display = 'none';
         document.getElementById('question-text').textContent = isLeitnerMode ? 
             "جعبه لایتنر شما خالی است! سوالی با پاسخ اشتباه وجود ندارد." : "لطفاً ابتدا فایل تست‌ها را ایمپورت کنید.";
     }
@@ -84,24 +84,16 @@ function renderQuestion() {
     
     currentQuestionData = activePool[currentIndex];
     
-    // ۱. نمایش دقیق منبع تست از کلید source فایل شما
-    if (currentQuestionData.source) {
-        document.getElementById('source-wrapper').innerHTML = `<span class="source-tag">📌 منبع: ${currentQuestionData.source}</span>`;
-    } else {
-        document.getElementById('source-wrapper').innerHTML = '';
-    }
-
-    // ۲. نمایش دقیق شماره تست از کلید id فایل شما
-    if (currentQuestionData.id) {
-        document.getElementById('id-wrapper').innerHTML = `<span class="id-tag">تست شماره: ${currentQuestionData.id}</span>`;
-    } else {
-        document.getElementById('id-wrapper').innerHTML = '';
-    }
+    // تزریق مستقیم منبع و شماره تست به هدر با کلمات فارسی واضح
+    const testId = currentQuestionData.id || (currentIndex + 1);
+    const testSource = currentQuestionData.source || "تألیفی یا نامشخص";
     
-    // ۳. نمایش صورت سوال انگلیسی
+    document.getElementById('test-info-header').innerHTML = `🔹 شماره تست: ${testId} <br>🔹 منبع: ${testSource}`;
+    
+    // نمایش صورت سوال انگلیسی
     document.getElementById('question-text').textContent = currentQuestionData.question || '';
     
-    // ۴. نمایش گزینه‌ها با فرمت انگلیسی استاندارد (1, 2, 3, 4) جهت عدم تداخل متنی
+    // نمایش گزینه‌ها با فرمت انگلیسی استاندارد برای خوانایی بهتر
     document.getElementById('opt1').textContent = "1. " + (currentQuestionData.option1 || '');
     document.getElementById('opt2').textContent = "2. " + (currentQuestionData.option2 || '');
     document.getElementById('opt3').textContent = "3. " + (currentQuestionData.option3 || '');
@@ -128,7 +120,6 @@ function submitAnswer(selected) {
         userScore += 10;
         
         if (isLeitnerMode) {
-            // حذف از لایتنر در صورت پاسخ صحیح در حالت مرور اشتباهات
             leitnerDatabase = leitnerDatabase.filter(item => item.id !== currentQuestionData.id);
         }
     } else {
@@ -137,7 +128,6 @@ function submitAnswer(selected) {
         document.getElementById('opt' + correct).style.backgroundColor = 'var(--success)';
         document.getElementById('opt' + correct).style.color = 'white';
         
-        // افزودن به لایتنر در صورت پاسخ اشتباه
         const exists = leitnerDatabase.some(item => item.id === currentQuestionData.id);
         if (!exists) leitnerDatabase.push(currentQuestionData);
     }
