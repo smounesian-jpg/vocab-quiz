@@ -224,10 +224,13 @@
         </div>
 
         <div class="import-section">
-            <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem;">📥 بارگذاری فایل دیتابیس کنکور</h4>
-            <input type="file" id="json-file-input" accept=".json" onchange="importJSONFile()" style="width: 100%;">
-        </div>
+    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem;">📥 بارگذاری فایل دیتابیس کنکور</h4>
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <input type="file" id="json-file-input" accept=".json" style="display:none;" onchange="importJSONFile()">
+        <button class="btn-mode" onclick="document.getElementById('json-file-input').click();">📤 انتخاب فایل JSON</button>
+        <span style="font-size: 0.85rem; color: var(--text-secondary);">(در صورت عدم بارگذاری خودکار)</span>
     </div>
+</div>
 
     <script src="/vocab-quiz/app.js"></script>
 </body>
